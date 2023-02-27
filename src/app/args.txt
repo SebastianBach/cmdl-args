@@ -1,0 +1,12 @@
+help:f:Print help text
+i:s:Input File
+o:s:Output Folder
+header:s:Output Header File
+cpp:s:Output Source File
+pragma:f:Use pragma as include guard
+space:s:Namespace
+hyphen:s:Characters preceding the arguments
+tab:i:Tab size (Whitespaces)
+comments:f:Enable comments
+date:f:Include creation date
+print:f:Include print_help() function.

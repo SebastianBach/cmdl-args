@@ -128,6 +128,34 @@ void make_result(const arguments& args, const std::filesystem::path& header, con
     cpp_file << "namespace args {"
              << "\n";
 
+    cpp_file << "inline auto check_flag(bool&flag, char* current_arg,  const char* arg) {"
+             << "\n";
+    cpp_file << tab << "if (flag) return false;"
+             << "\n";
+    cpp_file << tab << "flag = std::strcmp(current_arg, arg) == 0;"
+             << "\n";
+    cpp_file << tab << "return flag;"
+             << "\n";
+    cpp_file << "}\n";
+
+    cpp_file << "inline auto check_string(std::optional<std::string>&string_arg, int&i,char* current_arg, int argc, "
+                "char* argv[], const "
+                "char* arg) {"
+             << "\n";
+    cpp_file << tab << "if (string_arg.has_value()) return false;"
+             << "\n";
+    cpp_file << tab << "if (i < argc - 1 && std::strcmp(arg, current_arg) == 0) {"
+             << "\n";
+    cpp_file << tab_2 << "string_arg = std::string {argv[i+1]};"
+             << "\n";
+    cpp_file << tab_2 << "i = i + 1;"
+             << "\n";
+    cpp_file << tab_2 << "return true;"
+             << "\n";
+    cpp_file << tab << "}\n";
+    cpp_file << tab << "return false;\n";
+    cpp_file << "}\n";
+
     cpp_file << "const arguments parse(int argc, char* argv[]) {"
              << "\n";
     cpp_file << tab << "arguments result {};"
@@ -145,37 +173,21 @@ void make_result(const arguments& args, const std::filesystem::path& header, con
     {
         if (arg.type == TYPE::FLAG)
         {
-            cpp_file << tab_2 << else_if << " (!result." << arg.name << ") {"
+
+            cpp_file << tab_2 << "if (check_flag(result." << arg.name << ", arg, \"" << opt.hyphen << arg.name << "\"))"
                      << "\n";
 
-            cpp_file << tab_3 << "if (std::strcmp(arg, \"" << opt.hyphen << arg.name << "\") == 0) {"
-                     << "\n";
-            cpp_file << tab_4 << "result." << arg.name << " = true;"
-                     << "\n";
-            cpp_file << tab_4 << "continue;"
-                     << "\n";
-            cpp_file << tab_3 << "}"
-                     << "\n";
-            cpp_file << tab_2 << "}"
+            cpp_file << tab_3 << "continue;"
+                     << "\n"
                      << "\n";
         }
         else if (arg.type == TYPE::STRING)
         {
-            cpp_file << tab_2 << else_if << " (!result." << arg.name << ".has_value()) {"
+            cpp_file << tab_2 << "if (check_string(result." << arg.name << ", i, arg, argc, argv, \"" << opt.hyphen
+                     << arg.name << "\"))"
                      << "\n";
-
-            cpp_file << tab_3 << "if (i < argc - 1 && std::strcmp(arg, \"" << opt.hyphen << arg.name << "\") == 0) {"
-                     << "\n";
-            cpp_file << tab_4 << "result." << arg.name << " = std::string {argv[i+1]};"
-                     << "\n";
-            cpp_file << tab_4 << "i = i + 1;"
-                     << "\n";
-            cpp_file << tab_4 << "continue;"
-                     << "\n";
-
-            cpp_file << tab_3 << "}"
-                     << "\n";
-            cpp_file << tab_2 << "}"
+            cpp_file << tab_3 << "continue;"
+                     << "\n"
                      << "\n";
         }
         else if (arg.type == TYPE::INT)
@@ -250,8 +262,10 @@ void make_result(const arguments& args, const std::filesystem::path& header, con
             if (auto diff = max_length - tmp_string.length(); diff > 0)
                 tmp_string.append(diff, ' ');
 
-            static const std::map<TYPE, std::string> map_type_desc = {
-                {TYPE::DOUBLE, "<double>"}, {TYPE::INT, "<int>   "}, {TYPE::STRING, "<string>"}, {TYPE::FLAG, "        "}};
+            static const std::map<TYPE, std::string> map_type_desc = {{TYPE::DOUBLE, "<double>"},
+                                                                      {TYPE::INT, "<int>   "},
+                                                                      {TYPE::STRING, "<string>"},
+                                                                      {TYPE::FLAG, "        "}};
 
             cpp_file << tab << "std::cout << \"" << opt.hyphen << tmp_string << " " << map_type_desc.at(arg.type)
                      << " = " << arg.desc << "\" << \"\\n\";\n";

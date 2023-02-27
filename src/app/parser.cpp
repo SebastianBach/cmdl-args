@@ -8,64 +8,48 @@
 #include <ranges> 
 #include <array> 
 namespace args {
+inline auto check_flag(bool&flag, char* current_arg,  const char* arg) {
+    if (flag) return false;
+    flag = std::strcmp(current_arg, arg) == 0;
+    return flag;
+}
+inline auto check_string(std::optional<std::string>&string_arg, int&i,char* current_arg, int argc, char* argv[], const char* arg) {
+    if (string_arg.has_value()) return false;
+    if (i < argc - 1 && std::strcmp(arg, current_arg) == 0) {
+        string_arg = std::string {argv[i+1]};
+        i = i + 1;
+        return true;
+    }
+    return false;
+}
 const arguments parse(int argc, char* argv[]) {
     arguments result {};
     for (auto i = 1; i < argc; ++i) {
         auto* arg = argv[i];
-        if (!result.help) {
-            if (std::strcmp(arg, "--help") == 0) {
-                result.help = true;
-                continue;
-            }
-        }
-        if (!result.i.has_value()) {
-            if (i < argc - 1 && std::strcmp(arg, "--i") == 0) {
-                result.i = std::string {argv[i+1]};
-                i = i + 1;
-                continue;
-            }
-        }
-        if (!result.o.has_value()) {
-            if (i < argc - 1 && std::strcmp(arg, "--o") == 0) {
-                result.o = std::string {argv[i+1]};
-                i = i + 1;
-                continue;
-            }
-        }
-        if (!result.header.has_value()) {
-            if (i < argc - 1 && std::strcmp(arg, "--header") == 0) {
-                result.header = std::string {argv[i+1]};
-                i = i + 1;
-                continue;
-            }
-        }
-        if (!result.cpp.has_value()) {
-            if (i < argc - 1 && std::strcmp(arg, "--cpp") == 0) {
-                result.cpp = std::string {argv[i+1]};
-                i = i + 1;
-                continue;
-            }
-        }
-        if (!result.pragma) {
-            if (std::strcmp(arg, "--pragma") == 0) {
-                result.pragma = true;
-                continue;
-            }
-        }
-        if (!result.space.has_value()) {
-            if (i < argc - 1 && std::strcmp(arg, "--space") == 0) {
-                result.space = std::string {argv[i+1]};
-                i = i + 1;
-                continue;
-            }
-        }
-        if (!result.hyphen.has_value()) {
-            if (i < argc - 1 && std::strcmp(arg, "--hyphen") == 0) {
-                result.hyphen = std::string {argv[i+1]};
-                i = i + 1;
-                continue;
-            }
-        }
+        if (check_flag(result.help, arg, "--help"))
+            continue;
+
+        if (check_string(result.i, i, arg, argc, argv, "--i"))
+            continue;
+
+        if (check_string(result.o, i, arg, argc, argv, "--o"))
+            continue;
+
+        if (check_string(result.header, i, arg, argc, argv, "--header"))
+            continue;
+
+        if (check_string(result.cpp, i, arg, argc, argv, "--cpp"))
+            continue;
+
+        if (check_flag(result.pragma, arg, "--pragma"))
+            continue;
+
+        if (check_string(result.space, i, arg, argc, argv, "--space"))
+            continue;
+
+        if (check_string(result.hyphen, i, arg, argc, argv, "--hyphen"))
+            continue;
+
         if (!result.tab.has_value()) {
             if (i < argc - 1 && std::strcmp(arg, "--tab") == 0) {
                 try {
@@ -75,24 +59,15 @@ const arguments parse(int argc, char* argv[]) {
                 continue;
             }
         }
-        if (!result.comments) {
-            if (std::strcmp(arg, "--comments") == 0) {
-                result.comments = true;
-                continue;
-            }
-        }
-        if (!result.date) {
-            if (std::strcmp(arg, "--date") == 0) {
-                result.date = true;
-                continue;
-            }
-        }
-        if (!result.print) {
-            if (std::strcmp(arg, "--print") == 0) {
-                result.print = true;
-                continue;
-            }
-        }
+        if (check_flag(result.comments, arg, "--comments"))
+            continue;
+
+        if (check_flag(result.date, arg, "--date"))
+            continue;
+
+        if (check_flag(result.print, arg, "--print"))
+            continue;
+
     }
     return result;
 }

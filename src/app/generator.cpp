@@ -14,6 +14,31 @@ namespace generator
 void make_result(const arguments& args, const std::filesystem::path& header, const std::filesystem::path& cpp,
                  const options& opt)
 {
+    bool has_flags   = false;
+    bool has_strings = false;
+    bool has_ints    = false;
+    bool has_doubles = false;
+
+    for (const auto& arg : args.args)
+    {
+        if (arg.type == TYPE::FLAG)
+        {
+            has_flags = true;
+        }
+        else if (arg.type == TYPE::STRING)
+        {
+            has_strings = true;
+        }
+        else if (arg.type == TYPE::INT)
+        {
+            has_ints = true;
+        }
+        else if (arg.type == TYPE::DOUBLE)
+        {
+            has_doubles = true;
+        }
+    }
+
     const auto tab   = opt.tab;
     const auto tab_2 = tab + tab;
     const auto tab_3 = tab + tab + tab;
@@ -102,8 +127,17 @@ void make_result(const arguments& args, const std::filesystem::path& header, con
         header_file << "void print_help();"
                     << "\n";
     }
+    if (opt.values)
+    {
+        if (opt.comments)
+            header_file << "\n// Print argument values to standard output."
+                        << "\n";
+        header_file << "void print_values(const arguments&);"
+                    << "\n";
+    }
 
     header_file << "}";
+
 
     header_file.close();
 
@@ -128,33 +162,90 @@ void make_result(const arguments& args, const std::filesystem::path& header, con
     cpp_file << "namespace args {"
              << "\n";
 
-    cpp_file << "inline auto check_flag(bool&flag, char* current_arg,  const char* arg) {"
-             << "\n";
-    cpp_file << tab << "if (flag) return false;"
-             << "\n";
-    cpp_file << tab << "flag = std::strcmp(current_arg, arg) == 0;"
-             << "\n";
-    cpp_file << tab << "return flag;"
-             << "\n";
-    cpp_file << "}\n";
+    if (has_flags)
+    {
+        cpp_file << "inline auto check_flag(bool&flag, char* current_arg,  const char* arg) {"
+                 << "\n";
+        cpp_file << tab << "if (flag) return false;"
+                 << "\n";
+        cpp_file << tab << "flag = std::strcmp(current_arg, arg) == 0;"
+                 << "\n";
+        cpp_file << tab << "return flag;"
+                 << "\n";
+        cpp_file << "}\n";
+    }
 
-    cpp_file << "inline auto check_string(std::optional<std::string>&string_arg, int&i,char* current_arg, int argc, "
-                "char* argv[], const "
-                "char* arg) {"
-             << "\n";
-    cpp_file << tab << "if (string_arg.has_value()) return false;"
-             << "\n";
-    cpp_file << tab << "if (i < argc - 1 && std::strcmp(arg, current_arg) == 0) {"
-             << "\n";
-    cpp_file << tab_2 << "string_arg = std::string {argv[i+1]};"
-             << "\n";
-    cpp_file << tab_2 << "i = i + 1;"
-             << "\n";
-    cpp_file << tab_2 << "return true;"
-             << "\n";
-    cpp_file << tab << "}\n";
-    cpp_file << tab << "return false;\n";
-    cpp_file << "}\n";
+    if (has_strings)
+    {
+        cpp_file
+            << "inline auto check_string(std::optional<std::string>&string_arg, int&i,char* current_arg, int argc, "
+               "char* argv[], const "
+               "char* arg) {"
+            << "\n";
+        cpp_file << tab << "if (string_arg.has_value()) return false;"
+                 << "\n";
+        cpp_file << tab << "if (i < argc - 1 && std::strcmp(arg, current_arg) == 0) {"
+                 << "\n";
+        cpp_file << tab_2 << "string_arg = std::string {argv[i+1]};"
+                 << "\n";
+        cpp_file << tab_2 << "i = i + 1;"
+                 << "\n";
+        cpp_file << tab_2 << "return true;"
+                 << "\n";
+        cpp_file << tab << "}\n";
+        cpp_file << tab << "return false;\n";
+        cpp_file << "}\n";
+    }
+
+    if (has_ints)
+    {
+        cpp_file
+            << "inline auto check_int(std::optional<int>&int_arg, int&i, int argc, char* argv[], const char* arg) {"
+            << "\n";
+        cpp_file << tab << "if (int_arg.has_value()) return false;"
+                 << "\n";
+
+        cpp_file << tab << "if (i < argc - 1 && std::strcmp(arg, argv[i]) == 0) {"
+                 << "\n";
+
+        cpp_file << tab_2
+                 << "try { int_arg = std::stoi(std::string{argv[i + 1]});} catch (const std::exception&) {}  "
+                 << "\n";
+
+        cpp_file << tab_2 << "++i;"
+                 << "\n";
+        cpp_file << tab_2 << "return true;"
+                 << "\n";
+        cpp_file << tab << "}\n";
+        cpp_file << tab << "return false;\n";
+
+        cpp_file << "}\n";
+    }
+
+    if (has_doubles)
+    {
+        cpp_file << "inline auto check_double(std::optional<double>&double_arg, int&i, int argc, char* argv[], const "
+                    "char* arg) {"
+                 << "\n";
+        cpp_file << tab << "if (double_arg.has_value()) return false;"
+                 << "\n";
+
+        cpp_file << tab << "if (i < argc - 1 && std::strcmp(arg, argv[i]) == 0) {"
+                 << "\n";
+
+        cpp_file << tab_2
+                 << "try { double_arg = std::stod(std::string{argv[i + 1]});} catch (const std::exception&) {}  "
+                 << "\n";
+
+        cpp_file << tab_2 << "++i;"
+                 << "\n";
+        cpp_file << tab_2 << "return true;"
+                 << "\n";
+        cpp_file << tab << "}\n";
+        cpp_file << tab << "return false;\n";
+
+        cpp_file << "}\n";
+    }
 
     cpp_file << "const arguments parse(int argc, char* argv[]) {"
              << "\n";
@@ -173,7 +264,6 @@ void make_result(const arguments& args, const std::filesystem::path& header, con
     {
         if (arg.type == TYPE::FLAG)
         {
-
             cpp_file << tab_2 << "if (check_flag(result." << arg.name << ", arg, \"" << opt.hyphen << arg.name << "\"))"
                      << "\n";
 
@@ -192,47 +282,20 @@ void make_result(const arguments& args, const std::filesystem::path& header, con
         }
         else if (arg.type == TYPE::INT)
         {
-            cpp_file << tab_2 << else_if << " (!result." << arg.name << ".has_value()) {"
+            cpp_file << tab_2 << "if (check_int(result." << arg.name << ", i, argc, argv, \"" << opt.hyphen << arg.name
+                     << "\"))"
                      << "\n";
-
-            cpp_file << tab_3 << "if (i < argc - 1 && std::strcmp(arg, \"" << opt.hyphen << arg.name << "\") == 0) {"
-                     << "\n";
-
-            cpp_file << tab_4 << "try {"
-                     << "\n";
-            cpp_file << tab_5 << "result." << arg.name << " = std::stoi(std::string{argv[i+1]}); ++i;"
-                     << "\n";
-            cpp_file << tab_4 << "} catch (const std::exception&) {}"
-                     << "\n";
-            cpp_file << tab_4 << "i = i + 1;"
-                     << "\n";
-            cpp_file << tab_4 << "continue;"
-                     << "\n";
-            cpp_file << tab_3 << "}"
-                     << "\n";
-            cpp_file << tab_2 << "}"
+            cpp_file << tab_3 << "continue;"
+                     << "\n"
                      << "\n";
         }
         else if (arg.type == TYPE::DOUBLE)
         {
-            cpp_file << tab_2 << else_if << " (!result." << arg.name << ".has_value()) {"
+            cpp_file << tab_2 << "if (check_double(result." << arg.name << ", i, argc, argv, \"" << opt.hyphen
+                     << arg.name << "\"))"
                      << "\n";
-
-            cpp_file << tab_3 << "if (i < argc - 1 && std::strcmp(arg, \"" << opt.hyphen << arg.name << "\") == 0) {"
-                     << "\n";
-            cpp_file << tab_4 << "try {"
-                     << "\n";
-            cpp_file << tab_5 << "result." << arg.name << " = std::stod(std::string{argv[i+1]}); ++i;"
-                     << "\n";
-            cpp_file << tab_4 << "} catch (const std::exception&) {}"
-                     << "\n";
-            cpp_file << tab_4 << "i = i + 1;"
-                     << "\n";
-            cpp_file << tab_4 << "continue;"
-                     << "\n";
-            cpp_file << tab_3 << "}"
-                     << "\n";
-            cpp_file << tab_2 << "}"
+            cpp_file << tab_3 << "continue;"
+                     << "\n"
                      << "\n";
         }
     }
@@ -274,6 +337,38 @@ void make_result(const arguments& args, const std::filesystem::path& header, con
         cpp_file << "}"
                  << "\n";
     }
+
+    if (opt.values)
+    {
+        cpp_file << "void print_values(const arguments&args) {"
+                 << "\n";
+
+        cpp_file << tab << "std::cout << std::boolalpha;"
+                 << "\n";
+
+        for (const auto& arg : args.args)
+        {
+            if (arg.type == TYPE::FLAG)
+            {
+                cpp_file << tab << "std::cout << \"" << opt.hyphen << arg.name << " = \" << args." << arg.name
+                         << " << \"\\n\";"
+                         << "\n";
+            }
+            else
+            {
+                cpp_file << tab << "std::cout << \"" << opt.hyphen << arg.name << " \";"
+                         << "\n";
+
+                cpp_file << tab << "if (!args." << arg.name << ".has_value()) { std::cout<< \"not set.\" << \"\\n\"; }"
+                         << "\n";
+                cpp_file << tab << "else { std::cout<< \"= \" << args." << arg.name << ".value() << \"\\n\"; }"
+                         << "\n";
+            }
+        }
+        cpp_file << "}\n";
+    }
+
+
 
     cpp_file << "}\n";
 

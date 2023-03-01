@@ -13,6 +13,9 @@ int main(int argc, char* argv[])
         return 0;
     }
 
+    if (app_arguments.v)
+        args::print_values(app_arguments);
+
     if (!(app_arguments.i.has_value() && app_arguments.header.has_value() && app_arguments.cpp.has_value() &&
           app_arguments.o.has_value()))
     {
@@ -28,9 +31,13 @@ int main(int argc, char* argv[])
     std::filesystem::path cpp_file_name    = app_arguments.cpp.value();
     std::filesystem::path cpp_full_path    = input_folder / cpp_file_name;
 
-    std::cout << "Input: " << input << "\n";
-    std::cout << "Header: " << header_full_path << "\n";
-    std::cout << "Source: " << cpp_full_path << "\n";
+    if (app_arguments.v)
+    {
+        std::cout << "\n";
+        std::cout << "Input: " << input << "\n";
+        std::cout << "Header: " << header_full_path << "\n";
+        std::cout << "Source: " << cpp_full_path << "\n";
+    }
 
     std::ifstream input_file{input};
 
@@ -62,6 +69,7 @@ int main(int argc, char* argv[])
         .comments = app_arguments.comments,
         .date     = app_arguments.date,
         .print    = app_arguments.print,
+        .values   = app_arguments.values,
         .space    = app_arguments.space.value_or("args"),
         .hyphen   = app_arguments.hyphen.value_or("--"),
         .tab      = std::string(app_arguments.tab.value_or(4), ' '),

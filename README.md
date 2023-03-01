@@ -65,6 +65,8 @@ Options to configure the resulting code are:
 - --comments: Enable comments.
 - --date: Include creation date.
 - --print: Include ```print_help()``` function.
+- --values: Include ```print_values()``` function.
+- --v: Verbose output.
 
 
 ## Input File

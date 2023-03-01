@@ -10,3 +10,5 @@ tab:i:Tab size (Whitespaces)
 comments:f:Enable comments
 date:f:Include creation date
 print:f:Include print_help() function.
+values:f:Include print_values() function.
+v:f:Verbose Output

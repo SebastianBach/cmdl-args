@@ -1,5 +1,5 @@
 // Generated with https://github.com/SebastianBach/cmdl-args 
-// Created 2023-2-27 
+// Created 2023-3-1 
 #include "parser.h"
 #include <iostream> 
 #include <cstring> 
@@ -18,6 +18,15 @@ inline auto check_string(std::optional<std::string>&string_arg, int&i,char* curr
     if (i < argc - 1 && std::strcmp(arg, current_arg) == 0) {
         string_arg = std::string {argv[i+1]};
         i = i + 1;
+        return true;
+    }
+    return false;
+}
+inline auto check_int(std::optional<int>&int_arg, int&i, int argc, char* argv[], const char* arg) {
+    if (int_arg.has_value()) return false;
+    if (i < argc - 1 && std::strcmp(arg, argv[i]) == 0) {
+        try { int_arg = std::stoi(std::string{argv[i + 1]});} catch (const std::exception&) {}  
+        ++i;
         return true;
     }
     return false;
@@ -50,15 +59,9 @@ const arguments parse(int argc, char* argv[]) {
         if (check_string(result.hyphen, i, arg, argc, argv, "--hyphen"))
             continue;
 
-        if (!result.tab.has_value()) {
-            if (i < argc - 1 && std::strcmp(arg, "--tab") == 0) {
-                try {
-                    result.tab = std::stoi(std::string{argv[i+1]}); ++i;
-                } catch (const std::exception&) {}
-                i = i + 1;
-                continue;
-            }
-        }
+        if (check_int(result.tab, i, argc, argv, "--tab"))
+            continue;
+
         if (check_flag(result.comments, arg, "--comments"))
             continue;
 
@@ -66,6 +69,12 @@ const arguments parse(int argc, char* argv[]) {
             continue;
 
         if (check_flag(result.print, arg, "--print"))
+            continue;
+
+        if (check_flag(result.values, arg, "--values"))
+            continue;
+
+        if (check_flag(result.v, arg, "--v"))
             continue;
 
     }
@@ -85,5 +94,38 @@ void print_help() {
     std::cout << "--comments          = Enable comments" << "\n";
     std::cout << "--date              = Include creation date" << "\n";
     std::cout << "--print             = Include print_help() function." << "\n";
+    std::cout << "--values            = Include print_values() function." << "\n";
+    std::cout << "--v                 = Verbose Output" << "\n";
+}
+void print_values(const arguments&args) {
+    std::cout << std::boolalpha;
+    std::cout << "--help = " << args.help << "\n";
+    std::cout << "--i ";
+    if (!args.i.has_value()) { std::cout<< "not set." << "\n"; }
+    else { std::cout<< "= " << args.i.value() << "\n"; }
+    std::cout << "--o ";
+    if (!args.o.has_value()) { std::cout<< "not set." << "\n"; }
+    else { std::cout<< "= " << args.o.value() << "\n"; }
+    std::cout << "--header ";
+    if (!args.header.has_value()) { std::cout<< "not set." << "\n"; }
+    else { std::cout<< "= " << args.header.value() << "\n"; }
+    std::cout << "--cpp ";
+    if (!args.cpp.has_value()) { std::cout<< "not set." << "\n"; }
+    else { std::cout<< "= " << args.cpp.value() << "\n"; }
+    std::cout << "--pragma = " << args.pragma << "\n";
+    std::cout << "--space ";
+    if (!args.space.has_value()) { std::cout<< "not set." << "\n"; }
+    else { std::cout<< "= " << args.space.value() << "\n"; }
+    std::cout << "--hyphen ";
+    if (!args.hyphen.has_value()) { std::cout<< "not set." << "\n"; }
+    else { std::cout<< "= " << args.hyphen.value() << "\n"; }
+    std::cout << "--tab ";
+    if (!args.tab.has_value()) { std::cout<< "not set." << "\n"; }
+    else { std::cout<< "= " << args.tab.value() << "\n"; }
+    std::cout << "--comments = " << args.comments << "\n";
+    std::cout << "--date = " << args.date << "\n";
+    std::cout << "--print = " << args.print << "\n";
+    std::cout << "--values = " << args.values << "\n";
+    std::cout << "--v = " << args.v << "\n";
 }
 }

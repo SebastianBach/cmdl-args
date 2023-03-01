@@ -92,6 +92,7 @@ struct options
     bool        comments;
     bool        date;
     bool        print;
+    bool        values;
     std::string space;
     std::string hyphen;
     std::string tab;

@@ -1,5 +1,5 @@
 // Generated with https://github.com/SebastianBach/cmdl-args 
-// Created 2023-2-27 
+// Created 2023-3-1 
 #pragma once
 #include <optional>
 #include <string>
@@ -53,9 +53,20 @@ struct arguments {
     // Include print_help() function.
     // True if the flag was set, otherwise false.
     bool print;
+
+    // Include print_values() function.
+    // True if the flag was set, otherwise false.
+    bool values;
+
+    // Verbose Output
+    // True if the flag was set, otherwise false.
+    bool v;
 };
 const arguments parse(int argc, char* argv[]);
 
 // Print help text to standard output.
 void print_help();
+
+// Print argument values to standard output.
+void print_values(const arguments&);
 }

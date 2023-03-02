@@ -1,52 +1,52 @@
 // Generated with https://github.com/SebastianBach/cmdl-args 
-// Created 2023-3-1 
+// Created Mar 02, 2023 
 #pragma once
 #include <optional>
 #include <string>
 namespace args {
 struct arguments {
 
-    // Print help text
+    // Print help text.
     // True if the flag was set, otherwise false.
     bool help;
 
-    // Input File
+    // Input File.
     // Empty if the argument was not set.
     std::optional<std::string> i;
 
-    // Output Folder
+    // Output Folder.
     // Empty if the argument was not set.
     std::optional<std::string> o;
 
-    // Output Header File
+    // Output Header File.
     // Empty if the argument was not set.
     std::optional<std::string> header;
 
-    // Output Source File
+    // Output Source File.
     // Empty if the argument was not set.
     std::optional<std::string> cpp;
 
-    // Use pragma as include guard
+    // Use pragma as include guard.
     // True if the flag was set, otherwise false.
     bool pragma;
 
-    // Namespace
+    // Namespace.
     // Empty if the argument was not set.
     std::optional<std::string> space;
 
-    // Characters preceding the arguments
+    // Characters preceding the arguments.
     // Empty if the argument was not set.
     std::optional<std::string> hyphen;
 
-    // Tab size (Whitespaces)
+    // Tab size.
     // Empty if the argument was not set.
     std::optional<int> tab;
 
-    // Enable comments
+    // Enable comments.
     // True if the flag was set, otherwise false.
     bool comments;
 
-    // Include creation date
+    // Include creation date.
     // True if the flag was set, otherwise false.
     bool date;
 
@@ -58,15 +58,13 @@ struct arguments {
     // True if the flag was set, otherwise false.
     bool values;
 
-    // Verbose Output
+    // Verbose Output.
     // True if the flag was set, otherwise false.
     bool v;
 };
 const arguments parse(int argc, char* argv[]);
-
 // Print help text to standard output.
 void print_help();
-
-// Print argument values to standard output.
+// Print arguments to standard output.
 void print_values(const arguments&);
 }

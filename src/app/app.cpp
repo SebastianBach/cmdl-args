@@ -1,5 +1,6 @@
 #include "generator.h"
 #include "parser.h"
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 
@@ -64,6 +65,22 @@ int main(int argc, char* argv[])
 
     input_file.close();
 
+    std::ofstream header_file{header_full_path};
+
+    if (!header_file.is_open())
+    {
+        std::cerr << "Failed to open header file." << std::endl;
+        return 1;
+    }
+
+    std::ofstream cpp_file{cpp_full_path};
+
+    if (!cpp_file.is_open())
+    {
+        std::cerr << "Failed to open cpp file." << std::endl;
+        return 1;
+    }
+
     const generator::options opt{
         .pragma   = app_arguments.pragma,
         .comments = app_arguments.comments,
@@ -76,7 +93,10 @@ int main(int argc, char* argv[])
         .header   = app_arguments.header.value(),
     };
 
-    generator::make_result(args, header_full_path, cpp_full_path, opt);
+    generator::make_result(args, header_file, cpp_file, opt);
+
+    header_file.close();
+    cpp_file.close();
 
     return 0;
 }

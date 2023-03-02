@@ -1,6 +1,5 @@
 #pragma once
-
-#include <filesystem>
+#include <fstream>
 #include <string>
 #include <vector>
 
@@ -88,18 +87,18 @@ struct arguments
 
 struct options
 {
-    bool        pragma;
-    bool        comments;
-    bool        date;
-    bool        print;
-    bool        values;
+    bool pragma;
+    bool comments;
+    bool date;
+    bool print;
+    bool values;
+
     std::string space;
     std::string hyphen;
     std::string tab;
     std::string header;
 };
 
-void make_result(const arguments& args, const std::filesystem::path& header,
-                 const std::filesystem::path& cpp, const options& opt);
+void make_result(const arguments& args, std::ofstream& header_file, std::ofstream& cpp_file, const options& opt);
 
 } // namespace generator

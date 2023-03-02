@@ -10,8 +10,7 @@ int main(int argc, char* argv[])
 {
     const auto app_arguments = args::parse(argc, argv);
 
-    if (app_arguments.help)
-    {
+    if (app_arguments.help) {
         args::print_help();
         return 0;
     }
@@ -45,7 +44,6 @@ cmake --build . --config Release
 ## Arguments
 
 Basic arguments are:
-- --help: Print help text.
 - --i: Input File path.
 - --o: Output folder path.
 - --header: Output Header File
@@ -66,6 +64,10 @@ Options to configure the resulting code are:
 - --date: Include creation date.
 - --print: Include ```print_help()``` function.
 - --values: Include ```print_values()``` function.
+
+
+Further options are:
+- --help: Print help text.
 - --v: Verbose output.
 
 

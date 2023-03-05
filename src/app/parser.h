@@ -1,14 +1,20 @@
 // Generated with https://github.com/SebastianBach/cmdl-args 
-// Created Mar 02, 2023 
+// Created Mar 05, 2023 
 #pragma once
 #include <optional>
 #include <string>
 namespace args {
 struct arguments {
+    arguments(const arguments&) = delete;
+    arguments() = default;
 
     // Print help text.
     // True if the flag was set, otherwise false.
     bool help;
+
+    // Print version.
+    // True if the flag was set, otherwise false.
+    bool version;
 
     // Input File.
     // Empty if the argument was not set.
@@ -62,7 +68,7 @@ struct arguments {
     // True if the flag was set, otherwise false.
     bool v;
 };
-const arguments parse(int argc, char* argv[]);
+const arguments& parse(int argc, char* argv[]);
 // Print help text to standard output.
 void print_help();
 // Print arguments to standard output.

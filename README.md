@@ -68,6 +68,7 @@ Options to configure the resulting code are:
 
 Further options are:
 - --help: Print help text.
+- --version: Print version.
 - --v: Verbose output.
 
 

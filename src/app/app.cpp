@@ -4,33 +4,21 @@
 #include <fstream>
 #include <iostream>
 
-int main(int argc, char* argv[])
+constexpr static auto s_version = "0.1.0";
+
+std::tuple<int, std::string> process(const args::arguments& app_arguments)
 {
-    const auto app_arguments = args::parse(argc, argv);
-
-    if (app_arguments.help)
-    {
-        args::print_help();
-        return 0;
-    }
-
-    if (app_arguments.v)
-        args::print_values(app_arguments);
-
     if (!(app_arguments.i.has_value() && app_arguments.header.has_value() && app_arguments.cpp.has_value() &&
           app_arguments.o.has_value()))
-    {
-        std::cout << "Missing input or output file.";
-        return -1;
-    }
+        return {-1, "Missing input or output file."};
 
-    const auto            input        = app_arguments.i.value();
-    std::filesystem::path input_folder = app_arguments.o.value();
+    const auto            input         = app_arguments.i.value();
+    std::filesystem::path output_folder = app_arguments.o.value();
 
     std::filesystem::path header_file_name = app_arguments.header.value();
-    std::filesystem::path header_full_path = input_folder / header_file_name;
+    std::filesystem::path header_full_path = output_folder / header_file_name;
     std::filesystem::path cpp_file_name    = app_arguments.cpp.value();
-    std::filesystem::path cpp_full_path    = input_folder / cpp_file_name;
+    std::filesystem::path cpp_full_path    = output_folder / cpp_file_name;
 
     if (app_arguments.v)
     {
@@ -43,10 +31,7 @@ int main(int argc, char* argv[])
     std::ifstream input_file{input};
 
     if (!input_file.is_open())
-    {
-        std::cerr << "Failed to open input file." << std::endl;
-        return 1;
-    }
+        return {1, "Failed to open input file."};
 
     generator::arguments args;
 
@@ -68,18 +53,12 @@ int main(int argc, char* argv[])
     std::ofstream header_file{header_full_path};
 
     if (!header_file.is_open())
-    {
-        std::cerr << "Failed to open header file." << std::endl;
-        return 1;
-    }
+        return {1, "Failed to open header file."};
 
     std::ofstream cpp_file{cpp_full_path};
 
     if (!cpp_file.is_open())
-    {
-        std::cerr << "Failed to open cpp file." << std::endl;
-        return 1;
-    }
+        return {1, "Failed to open cpp file."};
 
     const generator::options opt{
         .pragma   = app_arguments.pragma,
@@ -98,5 +77,39 @@ int main(int argc, char* argv[])
     header_file.close();
     cpp_file.close();
 
-    return 0;
+    return {0, ""};
+}
+
+void print_error(const std::string& err)
+{
+    std::cout << "\033[31m";
+    std::cout << err;
+    std::cout << "\033[0m";
+}
+
+int main(int argc, char* argv[])
+{
+    const auto& app_arguments = args::parse(argc, argv);
+
+    if (app_arguments.help)
+    {
+        args::print_help();
+        return 0;
+    }
+
+    if (app_arguments.version)
+    {
+        std::cout << s_version << std::endl;
+        return 0;
+    }
+
+    if (app_arguments.v)
+        args::print_values(app_arguments);
+
+    const auto [res, err] = process(app_arguments);
+
+    if (res != 0)
+        print_error(err);
+
+    return res;
 }

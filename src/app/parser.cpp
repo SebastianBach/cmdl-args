@@ -1,11 +1,12 @@
 // Generated with https://github.com/SebastianBach/cmdl-args 
-// Created Mar 02, 2023 
+// Created Mar 05, 2023 
 #include <iostream>
 #include <cstring>
 #include <optional>
 #include <string>
 #include "parser.h"
 namespace args {
+static arguments s_args;
 inline auto check_flag(bool&flag, char* current_arg,  const char* arg) {
     if (flag) return false;
     flag = std::strcmp(current_arg, arg) == 0;
@@ -29,57 +30,60 @@ inline auto check_int(std::optional<int>&int_arg, int&i, int argc, char* argv[],
     }
     return false;
 }
-const arguments parse(int argc, char* argv[]) {
-    arguments result {};
+const arguments& parse(int argc, char* argv[]) {
     for (auto i = 1; i < argc; ++i) {
-        if (check_flag(result.help, argv[i], "--help"))
+        if (check_flag(s_args.help, argv[i], "--help"))
             continue;
 
-        if (check_string(result.i, i, argc, argv, "--i"))
+        if (check_flag(s_args.version, argv[i], "--version"))
             continue;
 
-        if (check_string(result.o, i, argc, argv, "--o"))
+        if (check_string(s_args.i, i, argc, argv, "--i"))
             continue;
 
-        if (check_string(result.header, i, argc, argv, "--header"))
+        if (check_string(s_args.o, i, argc, argv, "--o"))
             continue;
 
-        if (check_string(result.cpp, i, argc, argv, "--cpp"))
+        if (check_string(s_args.header, i, argc, argv, "--header"))
             continue;
 
-        if (check_flag(result.pragma, argv[i], "--pragma"))
+        if (check_string(s_args.cpp, i, argc, argv, "--cpp"))
             continue;
 
-        if (check_string(result.space, i, argc, argv, "--space"))
+        if (check_flag(s_args.pragma, argv[i], "--pragma"))
             continue;
 
-        if (check_string(result.hyphen, i, argc, argv, "--hyphen"))
+        if (check_string(s_args.space, i, argc, argv, "--space"))
             continue;
 
-        if (check_int(result.tab, i, argc, argv, "--tab"))
+        if (check_string(s_args.hyphen, i, argc, argv, "--hyphen"))
             continue;
 
-        if (check_flag(result.comments, argv[i], "--comments"))
+        if (check_int(s_args.tab, i, argc, argv, "--tab"))
             continue;
 
-        if (check_flag(result.date, argv[i], "--date"))
+        if (check_flag(s_args.comments, argv[i], "--comments"))
             continue;
 
-        if (check_flag(result.print, argv[i], "--print"))
+        if (check_flag(s_args.date, argv[i], "--date"))
             continue;
 
-        if (check_flag(result.values, argv[i], "--values"))
+        if (check_flag(s_args.print, argv[i], "--print"))
             continue;
 
-        if (check_flag(result.v, argv[i], "--v"))
+        if (check_flag(s_args.values, argv[i], "--values"))
+            continue;
+
+        if (check_flag(s_args.v, argv[i], "--v"))
             continue;
 
     }
-    return result;
+    return s_args;
 }
 void print_help() {
     std::cout << "Options:" << "\n";
     std::cout << "--help              = Print help text." << "\n";
+    std::cout << "--version           = Print version." << "\n";
     std::cout << "--i        <string> = Input File." << "\n";
     std::cout << "--o        <string> = Output Folder." << "\n";
     std::cout << "--header   <string> = Output Header File." << "\n";
@@ -97,6 +101,7 @@ void print_help() {
 void print_values(const arguments&args) {
     std::cout << std::boolalpha;
     std::cout << "--help     = " << args.help << "\n";
+    std::cout << "--version  = " << args.version << "\n";
     std::cout << "--i        ";
     if (args.i.has_value()) { std::cout<< "= " << args.i.value() << "\n"; }
     else { std::cout<< "not set" << "\n"; }

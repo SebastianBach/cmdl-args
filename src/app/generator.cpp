@@ -9,6 +9,10 @@
 #include <time.h>
 #include <vector>
 
+#if defined(__cpp_lib_format)
+#include <format>
+#endif
+
 namespace generator
 {
 
@@ -16,7 +20,7 @@ inline const char* pragma_once()
 {
     return "#pragma once\n";
 }
-
+#if defined(__cpp_lib_format)
 inline std::string include_local(const std::string& file)
 {
     return std::format("#include \"{}\"\n", file);
@@ -32,6 +36,41 @@ inline std::string start_namespace(const std::string& name)
     return std::format("namespace {} {{\n", name);
 }
 
+inline std::string comment(const char* text)
+{
+    return std::format("// {}\n", text);
+}
+inline std::string format_year(auto month, auto day, auto year)
+{
+    std::format("// Created {} {}, {} \n", month, day, year);
+}
+
+#else
+inline std::string include_local(const std::string& file)
+{
+    return std::string{"#include \""} + file + std::string{"\"\n"};
+}
+
+inline std::string include_stl(const std::string& lib)
+{
+    return std::string{"#include <\">"} + lib + std::string{">\n"};
+}
+
+inline std::string start_namespace(const std::string& name)
+{
+    return std::string{"namespace "} + name + std::string{" {\n"};
+}
+
+inline std::string comment(const char* text)
+{
+    return std::string{"// "} + text + std::string{"\n"};
+}
+inline std::string format_year(auto month, auto day, auto year)
+{
+    return std::string{"// Created "};
+}
+#endif
+
 inline const char* close()
 {
     return "}\n";
@@ -40,11 +79,6 @@ inline const char* close()
 inline std::string info()
 {
     return "// Generated with https://github.com/SebastianBach/cmdl-args \n";
-}
-
-inline std::string comment(const char* text)
-{
-    return std::format("// {}\n", text);
 }
 
 void generate_header(const arguments& args, const options& opt, std::ofstream& header_file, const std::string& date)
@@ -74,6 +108,9 @@ void generate_header(const arguments& args, const options& opt, std::ofstream& h
 
     header_file << "struct arguments {"
                 << "\n";
+
+    header_file << tab << "arguments(const arguments&) = delete;\n";
+    header_file << tab << "arguments() = default;\n";
 
     for (const auto& arg : args.args)
     {
@@ -111,7 +148,7 @@ void generate_header(const arguments& args, const options& opt, std::ofstream& h
 
     header_file << "};\n";
 
-    header_file << "const arguments parse(int argc, char* argv[]);"
+    header_file << "const arguments& parse(int argc, char* argv[]);"
                 << "\n";
 
     if (opt.print)
@@ -184,6 +221,8 @@ void generate_cpp(const arguments& args, const options& opt, std::ofstream& cpp_
     cpp_file << include_local(opt.header);
 
     cpp_file << start_namespace(opt.space);
+
+    cpp_file << "static arguments s_args;\n";
 
     if (has_flags)
     {
@@ -268,11 +307,8 @@ void generate_cpp(const arguments& args, const options& opt, std::ofstream& cpp_
         cpp_file << close();
     }
 
-    cpp_file << "const arguments parse(int argc, char* argv[]) {"
+    cpp_file << "const arguments& parse(int argc, char* argv[]) {"
              << "\n";
-    cpp_file << tab << "arguments result {};"
-             << "\n";
-
     cpp_file << tab << "for (auto i = 1; i < argc; ++i) {"
              << "\n";
 
@@ -280,7 +316,7 @@ void generate_cpp(const arguments& args, const options& opt, std::ofstream& cpp_
     {
         if (arg.type == TYPE::FLAG)
         {
-            cpp_file << tab_2 << "if (check_flag(result." << arg.name << ", argv[i], \"" << opt.hyphen << arg.name
+            cpp_file << tab_2 << "if (check_flag(s_args." << arg.name << ", argv[i], \"" << opt.hyphen << arg.name
                      << "\"))"
                      << "\n";
 
@@ -290,7 +326,7 @@ void generate_cpp(const arguments& args, const options& opt, std::ofstream& cpp_
         }
         else if (arg.type == TYPE::STRING)
         {
-            cpp_file << tab_2 << "if (check_string(result." << arg.name << ", i, argc, argv, \"" << opt.hyphen
+            cpp_file << tab_2 << "if (check_string(s_args." << arg.name << ", i, argc, argv, \"" << opt.hyphen
                      << arg.name << "\"))"
                      << "\n";
             cpp_file << tab_3 << "continue;"
@@ -299,7 +335,7 @@ void generate_cpp(const arguments& args, const options& opt, std::ofstream& cpp_
         }
         else if (arg.type == TYPE::INT)
         {
-            cpp_file << tab_2 << "if (check_int(result." << arg.name << ", i, argc, argv, \"" << opt.hyphen << arg.name
+            cpp_file << tab_2 << "if (check_int(s_args." << arg.name << ", i, argc, argv, \"" << opt.hyphen << arg.name
                      << "\"))"
                      << "\n";
             cpp_file << tab_3 << "continue;"
@@ -308,7 +344,7 @@ void generate_cpp(const arguments& args, const options& opt, std::ofstream& cpp_
         }
         else if (arg.type == TYPE::DOUBLE)
         {
-            cpp_file << tab_2 << "if (check_double(result." << arg.name << ", i, argc, argv, \"" << opt.hyphen
+            cpp_file << tab_2 << "if (check_double(s_args." << arg.name << ", i, argc, argv, \"" << opt.hyphen
                      << arg.name << "\"))"
                      << "\n";
             cpp_file << tab_3 << "continue;"
@@ -319,7 +355,7 @@ void generate_cpp(const arguments& args, const options& opt, std::ofstream& cpp_
 
     cpp_file << tab << "}"
              << "\n";
-    cpp_file << tab << "return result;"
+    cpp_file << tab << "return s_args;"
              << "\n";
     cpp_file << close();
 
@@ -393,15 +429,17 @@ void generate_cpp(const arguments& args, const options& opt, std::ofstream& cpp_
 
 void make_result(const arguments& args, std::ofstream& header_file, std::ofstream& cpp_file, const options& opt)
 {
-    std::string date;
+    std::string date{"unknown"};
 
     if (opt.date)
     {
+#if defined(__cpp_lib_chrono) && __cpp_lib_chrono >= 201907
         const auto now       = std::chrono::system_clock::now();
         const auto local_now = std::chrono::zoned_time(std::chrono::current_zone(), now);
         const auto ymd = std::chrono::year_month_day{std::chrono::floor<std::chrono::days>(local_now.get_local_time())};
 
-        date = std::format("// Created {} {}, {} \n", ymd.month(), ymd.day(), ymd.year());
+        date = format_year(ymd.month(), ymd.day(), ymd.year());
+#endif
     }
 
     generate_header(args, opt, header_file, date);

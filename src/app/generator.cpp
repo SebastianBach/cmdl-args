@@ -42,7 +42,7 @@ inline std::string comment(const char* text)
 }
 inline std::string format_year(auto month, auto day, auto year)
 {
-    std::format("// Created {} {}, {} \n", month, day, year);
+    return std::format("// Created {} {}, {} \n", month, day, year);
 }
 
 #else
@@ -184,10 +184,10 @@ void generate_cpp(const arguments& args, const options& opt, std::ofstream& cpp_
     const auto tab_4 = tab + tab + tab + tab;
     const auto tab_5 = tab + tab + tab + tab + tab;
 
-    bool has_flags   = false;
-    bool has_strings = false;
-    bool has_ints    = false;
-    bool has_doubles = false;
+    auto has_flags   = false;
+    auto has_strings = false;
+    auto has_ints    = false;
+    auto has_doubles = false;
 
     for (const auto& arg : args.args)
     {
@@ -269,7 +269,7 @@ void generate_cpp(const arguments& args, const options& opt, std::ofstream& cpp_
         cpp_file << tab << "if (i < argc - 1 && std::strcmp(arg, argv[i]) == 0) {"
                  << "\n";
 
-        cpp_file << tab_2 << "try { int_arg = std::stoi(std::string{argv[i + 1]});} catch (const std::exception&) {}  "
+        cpp_file << tab_2 << "try { int_arg = std::stoi(std::string{argv[i + 1]});} catch (const std::exception&) {}"
                  << "\n";
 
         cpp_file << tab_2 << "++i;"

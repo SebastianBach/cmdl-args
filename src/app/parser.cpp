@@ -1,5 +1,5 @@
 // Generated with https://github.com/SebastianBach/cmdl-args 
-// Created Mar 05, 2023 
+// Created Mar 16, 2023 
 #include <iostream>
 #include <cstring>
 #include <optional>
@@ -24,7 +24,7 @@ inline auto check_string(std::optional<std::string>&string_arg, int&i, int argc,
 inline auto check_int(std::optional<int>&int_arg, int&i, int argc, char* argv[], const char* arg) {
     if (int_arg.has_value()) return false;
     if (i < argc - 1 && std::strcmp(arg, argv[i]) == 0) {
-        try { int_arg = std::stoi(std::string{argv[i + 1]});} catch (const std::exception&) {}  
+        try { int_arg = std::stoi(std::string{argv[i + 1]});} catch (const std::exception&) {}
         ++i;
         return true;
     }

@@ -1,5 +1,5 @@
 help:f:Print help text.
-version:Print version.
+version:f:Print version.
 i:s:Input File.
 o:s:Output Folder.
 header:s:Output Header File.

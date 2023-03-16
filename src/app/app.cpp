@@ -1,12 +1,16 @@
 #include "generator.h"
 #include "parser.h"
+#include "tests.h"
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <map>
 
 constexpr static auto s_version = "0.1.0";
 
-std::tuple<int, std::string> process(const args::arguments& app_arguments)
+using process_success = std::tuple<int, std::string>;
+
+process_success process(const args::arguments& app_arguments)
 {
     if (!(app_arguments.i.has_value() && app_arguments.header.has_value() && app_arguments.cpp.has_value() &&
           app_arguments.o.has_value()))
@@ -36,15 +40,36 @@ std::tuple<int, std::string> process(const args::arguments& app_arguments)
     generator::arguments args;
 
     std::string line;
+
+    generator::token_array tokens;
+
     while (std::getline(input_file, line))
     {
         if (!line.empty())
         {
-            // TODO: may be garbage line; may fail!
-            generator::arg arg;
-            arg.parse(line);
+            const auto cnt = generator::scanner(line, tokens);
+            if (cnt == 3)
+            {
+                std::string type;
+                generator::token_to_string(tokens[1], line, type);
 
-            args.args.push_back(arg);
+                static const std::map<std::string, generator::TYPE> map{{"f", generator::TYPE::FLAG},
+                                                                        {"d", generator::TYPE::DOUBLE},
+                                                                        {"s", generator::TYPE::STRING},
+                                                                        {"i", generator::TYPE::INT}};
+
+                const auto it = map.find(type);
+                if (it != map.end())
+                {
+                    generator::arg arg;
+
+                    generator::token_to_string(tokens[0], line, arg.name);
+                    generator::token_to_string(tokens[2], line, arg.desc);
+                    arg.type = it->second;
+
+                    args.args.push_back(arg);
+                }
+            }
         }
     }
 
@@ -80,7 +105,7 @@ std::tuple<int, std::string> process(const args::arguments& app_arguments)
     return {0, ""};
 }
 
-void print_error(const std::string& err)
+inline void print_error(const std::string& err)
 {
     std::cout << "\033[31m";
     std::cout << err;
@@ -89,6 +114,9 @@ void print_error(const std::string& err)
 
 int main(int argc, char* argv[])
 {
+    // compile time unit tests
+    run_tests();
+
     const auto& app_arguments = args::parse(argc, argv);
 
     if (app_arguments.help)
@@ -96,8 +124,7 @@ int main(int argc, char* argv[])
         args::print_help();
         return 0;
     }
-
-    if (app_arguments.version)
+    else if (app_arguments.version)
     {
         std::cout << s_version << std::endl;
         return 0;

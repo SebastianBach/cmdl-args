@@ -97,8 +97,8 @@ void generate_header(const arguments& args, const options& opt, std::ofstream& h
     }
     else
     {
-        header_file << "#ifndef _PARSER_H__\n";
-        header_file << "#define _PARSER_H__\n";
+        header_file << "#ifndef _PARSER_H__\n"
+                       "#define _PARSER_H__\n";
     }
 
     header_file << include_stl("optional");
@@ -107,7 +107,7 @@ void generate_header(const arguments& args, const options& opt, std::ofstream& h
     header_file << start_namespace(opt.space);
 
     header_file << "struct arguments {"
-                << "\n";
+                   "\n";
 
     header_file << tab << "arguments(const arguments&) = delete;\n";
     header_file << tab << "arguments() = default;\n";
@@ -149,7 +149,7 @@ void generate_header(const arguments& args, const options& opt, std::ofstream& h
     header_file << "};\n";
 
     header_file << "const arguments& parse(int argc, char* argv[]);"
-                << "\n";
+                   "\n";
 
     if (opt.print)
     {
@@ -157,7 +157,7 @@ void generate_header(const arguments& args, const options& opt, std::ofstream& h
             header_file << comment("Print help text to standard output.");
 
         header_file << "void print_help();"
-                    << "\n";
+                       "\n";
     }
     if (opt.values)
     {
@@ -165,7 +165,7 @@ void generate_header(const arguments& args, const options& opt, std::ofstream& h
             header_file << comment("Print arguments to standard output.");
 
         header_file << "void print_values(const arguments&);"
-                    << "\n";
+                       "\n";
     }
 
     header_file << close();
@@ -192,21 +192,13 @@ void generate_cpp(const arguments& args, const options& opt, std::ofstream& cpp_
     for (const auto& arg : args.args)
     {
         if (arg.type == TYPE::FLAG)
-        {
             has_flags = true;
-        }
         else if (arg.type == TYPE::STRING)
-        {
             has_strings = true;
-        }
         else if (arg.type == TYPE::INT)
-        {
             has_ints = true;
-        }
         else if (arg.type == TYPE::DOUBLE)
-        {
             has_doubles = true;
-        }
     }
 
     cpp_file << info();
@@ -227,14 +219,17 @@ void generate_cpp(const arguments& args, const options& opt, std::ofstream& cpp_
     if (has_flags)
     {
         cpp_file << "inline auto check_flag(bool&flag, char* current_arg,  const char* arg) {"
-                 << "\n";
-        cpp_file << tab << "if (flag) return false;"
-                 << "\n";
-        cpp_file << tab << "flag = std::strcmp(current_arg, arg) == 0;"
-                 << "\n";
-        cpp_file << tab << "return flag;"
-                 << "\n";
-        cpp_file << close();
+                    "\n"
+                 << tab
+                 << "if (flag) return false;"
+                    "\n"
+                 << tab
+                 << "flag = std::strcmp(current_arg, arg) == 0;"
+                    "\n"
+                 << tab
+                 << "return flag;"
+                    "\n"
+                 << close();
     }
 
     if (has_strings)
@@ -242,75 +237,80 @@ void generate_cpp(const arguments& args, const options& opt, std::ofstream& cpp_
         cpp_file << "inline auto check_string(std::optional<std::string>&string_arg, int&i, int argc, "
                     "char* argv[], const "
                     "char* arg) {"
-                 << "\n";
-        cpp_file << tab << "if (string_arg.has_value()) return false;"
-                 << "\n";
-        cpp_file << tab << "if (i < argc - 1 && std::strcmp(arg, argv[i]) == 0) {"
-                 << "\n";
-        cpp_file << tab_2 << "string_arg = std::string {argv[i+1]};"
-                 << "\n";
-        cpp_file << tab_2 << "i = i + 1;"
-                 << "\n";
-        cpp_file << tab_2 << "return true;"
-                 << "\n";
-        cpp_file << tab << "}\n";
-        cpp_file << tab << "return false;\n";
-        cpp_file << close();
+                    "\n"
+                 << tab
+                 << "if (string_arg.has_value()) return false;"
+                    "\n"
+                 << tab
+                 << "if (i < argc - 1 && std::strcmp(arg, argv[i]) == 0) {"
+                    "\n"
+                 << tab_2
+                 << "string_arg = std::string {argv[i+1]};"
+                    "\n"
+                 << tab_2
+                 << "i = i + 1;"
+                    "\n"
+                 << tab_2
+                 << "return true;"
+                    "\n"
+                 << tab << "}\n"
+                 << tab << "return false;\n"
+                 << close();
     }
 
     if (has_ints)
     {
         cpp_file
             << "inline auto check_int(std::optional<int>&int_arg, int&i, int argc, char* argv[], const char* arg) {"
-            << "\n";
-        cpp_file << tab << "if (int_arg.has_value()) return false;"
-                 << "\n";
-
-        cpp_file << tab << "if (i < argc - 1 && std::strcmp(arg, argv[i]) == 0) {"
-                 << "\n";
-
-        cpp_file << tab_2 << "try { int_arg = std::stoi(std::string{argv[i + 1]});} catch (const std::exception&) {}"
-                 << "\n";
-
-        cpp_file << tab_2 << "++i;"
-                 << "\n";
-        cpp_file << tab_2 << "return true;"
-                 << "\n";
-        cpp_file << tab << "}\n";
-        cpp_file << tab << "return false;\n";
-
-        cpp_file << close();
+               "\n"
+            << tab
+            << "if (int_arg.has_value()) return false;"
+               "\n"
+            << tab
+            << "if (i < argc - 1 && std::strcmp(arg, argv[i]) == 0) {"
+               "\n"
+            << tab_2
+            << "try { int_arg = std::stoi(std::string{argv[i + 1]});} catch (const std::exception&) {}"
+               "\n"
+            << tab_2
+            << "++i;"
+               "\n"
+            << tab_2
+            << "return true;"
+               "\n"
+            << tab << close() << tab << "return false;\n"
+            << close();
     }
 
     if (has_doubles)
     {
         cpp_file << "inline auto check_double(std::optional<double>&double_arg, int&i, int argc, char* argv[], const "
                     "char* arg) {"
-                 << "\n";
-        cpp_file << tab << "if (double_arg.has_value()) return false;"
-                 << "\n";
-
-        cpp_file << tab << "if (i < argc - 1 && std::strcmp(arg, argv[i]) == 0) {"
-                 << "\n";
-
-        cpp_file << tab_2
+                    "\n"
+                 << tab
+                 << "if (double_arg.has_value()) return false;"
+                    "\n"
+                 << tab
+                 << "if (i < argc - 1 && std::strcmp(arg, argv[i]) == 0) {"
+                    "\n"
+                 << tab_2
                  << "try { double_arg = std::stod(std::string{argv[i + 1]});} catch (const std::exception&) {}  "
-                 << "\n";
-
-        cpp_file << tab_2 << "++i;"
-                 << "\n";
-        cpp_file << tab_2 << "return true;"
-                 << "\n";
-        cpp_file << tab << "}\n";
-        cpp_file << tab << "return false;\n";
-
-        cpp_file << close();
+                    "\n"
+                 << tab_2
+                 << "++i;"
+                    "\n"
+                 << tab_2
+                 << "return true;"
+                    "\n"
+                 << tab << close() << tab << "return false;\n"
+                 << close();
     }
 
     cpp_file << "const arguments& parse(int argc, char* argv[]) {"
-             << "\n";
-    cpp_file << tab << "for (auto i = 1; i < argc; ++i) {"
-             << "\n";
+                "\n";
+    cpp_file << tab
+             << "for (auto i = 1; i < argc; ++i) {"
+                "\n";
 
     for (const auto& arg : args.args)
     {
@@ -318,46 +318,50 @@ void generate_cpp(const arguments& args, const options& opt, std::ofstream& cpp_
         {
             cpp_file << tab_2 << "if (check_flag(s_args." << arg.name << ", argv[i], \"" << opt.hyphen << arg.name
                      << "\"))"
-                     << "\n";
-
-            cpp_file << tab_3 << "continue;"
-                     << "\n"
-                     << "\n";
+                        "\n"
+                     << tab_3
+                     << "continue;"
+                        "\n"
+                        "\n";
         }
         else if (arg.type == TYPE::STRING)
         {
             cpp_file << tab_2 << "if (check_string(s_args." << arg.name << ", i, argc, argv, \"" << opt.hyphen
-                     << arg.name << "\"))"
-                     << "\n";
-            cpp_file << tab_3 << "continue;"
-                     << "\n"
-                     << "\n";
+                     << arg.name
+                     << "\"))"
+                        "\n"
+                     << tab_3
+                     << "continue;"
+                        "\n"
+                        "\n";
         }
         else if (arg.type == TYPE::INT)
         {
             cpp_file << tab_2 << "if (check_int(s_args." << arg.name << ", i, argc, argv, \"" << opt.hyphen << arg.name
                      << "\"))"
-                     << "\n";
-            cpp_file << tab_3 << "continue;"
                      << "\n"
-                     << "\n";
+                     << tab_3
+                     << "continue;"
+                        "\n"
+                        "\n";
         }
         else if (arg.type == TYPE::DOUBLE)
         {
             cpp_file << tab_2 << "if (check_double(s_args." << arg.name << ", i, argc, argv, \"" << opt.hyphen
-                     << arg.name << "\"))"
-                     << "\n";
-            cpp_file << tab_3 << "continue;"
-                     << "\n"
-                     << "\n";
+                     << arg.name
+                     << "\"))"
+                        "\n"
+                     << tab_3
+                     << "continue;"
+                        "\n"
+                        "\n";
         }
     }
 
-    cpp_file << tab << "}"
-             << "\n";
-    cpp_file << tab << "return s_args;"
-             << "\n";
-    cpp_file << close();
+    cpp_file << tab << close() << tab
+             << "return s_args;"
+                "\n"
+             << close();
 
     size_t max_length = 0;
     for (const auto& arg : args.args)
@@ -367,7 +371,7 @@ void generate_cpp(const arguments& args, const options& opt, std::ofstream& cpp_
     if (opt.print)
     {
         cpp_file << "void print_help() {"
-                 << "\n";
+                    "\n";
 
         cpp_file << tab << "std::cout << \"Options:\" << \"\\n\";\n";
 
@@ -392,10 +396,11 @@ void generate_cpp(const arguments& args, const options& opt, std::ofstream& cpp_
     if (opt.values)
     {
         cpp_file << "void print_values(const arguments&args) {"
-                 << "\n";
+                    "\n";
 
-        cpp_file << tab << "std::cout << std::boolalpha;"
-                 << "\n";
+        cpp_file << tab
+                 << "std::cout << std::boolalpha;"
+                    "\n";
 
         for (const auto& arg : args.args)
         {
@@ -411,14 +416,16 @@ void generate_cpp(const arguments& args, const options& opt, std::ofstream& cpp_
             }
             else
             {
-                cpp_file << tab << "std::cout << \"" << opt.hyphen << tmp_string << " \";"
-                         << "\n";
+                cpp_file << tab << "std::cout << \"" << opt.hyphen << tmp_string
+                         << " \";"
+                            "\n";
 
                 cpp_file << tab << "if (args." << arg.name << ".has_value()) { std::cout<< \"= \" << args." << arg.name
                          << ".value() << \"\\n\"; }"
-                         << "\n";
-                cpp_file << tab << "else { std::cout<< \"not set\" << \"\\n\"; }"
-                         << "\n";
+                            "\n";
+                cpp_file << tab
+                         << "else { std::cout<< \"not set\" << \"\\n\"; }"
+                            "\n";
             }
         }
         cpp_file << close();

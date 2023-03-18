@@ -17,8 +17,19 @@ enum class TYPE
 // token as start and end index of the scanned line
 struct token
 {
+    constexpr token()
+    {
+        reset();
+    }
+
     unsigned int start;
     unsigned int end;
+
+    constexpr void reset()
+    {
+        start = 0;
+        end   = 0;
+    }
 };
 
 using token_array = std::array<token, 3>;
@@ -34,10 +45,7 @@ template <typename DATA> constexpr auto scanner(const DATA& line, token_array& t
 {
     // clear tokens
     for (auto& t : tokens)
-    {
-        t.start = 0;
-        t.end   = 0;
-    }
+        t.reset();
 
     tokens[0].start = 0;
     auto ti         = 0u;

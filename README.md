@@ -29,6 +29,8 @@ int main(int argc, char* argv[])
 
 ```
 
+The generated code requires C++ 17 (using ```std::optional```).
+
 
 # Build
 

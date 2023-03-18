@@ -54,10 +54,12 @@ constexpr auto test_scanner(const char (&input)[N], const char (&expected_token)
 #define TEST(ARG, MSG)                                                                                                 \
     static_assert(ARG, MSG);                                                                                           \
     if (!ARG)                                                                                                          \
-        return false;
+        sucess = false;
 
 constexpr auto run_tests()
 {
+
+    auto sucess = true;
     {
         const auto res = test_scanner("test:t:test argument", "test", 0, 3);
         TEST(res, "Test first token")
@@ -79,5 +81,5 @@ constexpr auto run_tests()
         TEST(res, "Test small input")
     }
 
-    return true;
+    return sucess;
 }

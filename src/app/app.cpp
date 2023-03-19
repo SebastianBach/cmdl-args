@@ -19,7 +19,7 @@ inline void print_error(const std::string& err)
 int main(int argc, char* argv[])
 {
     // compile time unit tests
-    static_assert(run_tests());
+    static_assert(run_tests(), "compile time unit tests");
 
     const auto& app_arguments = args::parse(argc, argv);
 

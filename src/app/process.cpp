@@ -4,6 +4,7 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <cstdlib>
 
 inline auto make_return(RETURN_VALUE value, const char* msg)
 {
@@ -47,6 +48,9 @@ process_success process(const args::arguments& app_arguments)
     {
         if (!line.empty())
         {
+            if (line.back() == '\r')
+                line.pop_back();
+
             const auto cnt = generator::scanner(line, tokens);
             if (cnt == 3)
             {

@@ -6,7 +6,8 @@
 
 template <auto N> constexpr auto to_array(const char (&a)[N])
 {
-    std::array<char, N - 1> out;
+    static_assert(N > 0);
+    std::array<char, N - 1> out{};
     for (auto i = 0u; i < N - 1; ++i)
         out[i] = a[i];
     return out;
@@ -21,20 +22,11 @@ constexpr auto check_token(const char (&a)[N], generator::token& token, const st
     if (diff != ref_length)
         return false;
 
-    for (auto i = 0; i < ref_length; ++i)
-    {
-        const auto ref   = a[i];
-        const auto value = data[i + token.start];
-
-        if (ref != value)
-            return false;
-    }
-
-    return true;
+    return std::equal(std::begin(a), std::end(a) - 1, std::begin(data) + token.start);
 }
 
-template <auto N, auto T1>
-constexpr auto test_scanner(const char (&input)[N], const char (&expected_token)[T1], auto idx, auto exp)
+template <auto N, auto T>
+constexpr auto test_scanner(const char (&input)[N], const char (&expected_token)[T], auto idx, auto exp)
 {
     auto data = to_array(input);
 

@@ -1,4 +1,5 @@
 #include "generator.h"
+#include <algorithm>
 #include <chrono>
 #include <filesystem>
 #include <fstream>
@@ -53,7 +54,7 @@ inline std::string include_local(const std::string& file)
 
 inline std::string include_stl(const std::string& lib)
 {
-    return std::string{"#include <\">"} + lib + std::string{">\n"};
+    return std::string{"#include <"} + lib + std::string{">\n"};
 }
 
 inline std::string start_namespace(const std::string& name)
@@ -184,22 +185,17 @@ void generate_cpp(const arguments& args, const options& opt, std::ofstream& cpp_
     const auto tab_4 = tab + tab + tab + tab;
     const auto tab_5 = tab + tab + tab + tab + tab;
 
-    auto has_flags   = false;
-    auto has_strings = false;
-    auto has_ints    = false;
-    auto has_doubles = false;
+    const auto has_flags =
+        std::any_of(args.args.begin(), args.args.end(), [](const auto& arg) { return arg.type == TYPE::FLAG; });
 
-    for (const auto& arg : args.args)
-    {
-        if (arg.type == TYPE::FLAG)
-            has_flags = true;
-        else if (arg.type == TYPE::STRING)
-            has_strings = true;
-        else if (arg.type == TYPE::INT)
-            has_ints = true;
-        else if (arg.type == TYPE::DOUBLE)
-            has_doubles = true;
-    }
+    const auto has_strings =
+        std::any_of(args.args.begin(), args.args.end(), [](const auto& arg) { return arg.type == TYPE::STRING; });
+
+    const auto has_ints =
+        std::any_of(args.args.begin(), args.args.end(), [](const auto& arg) { return arg.type == TYPE::INT; });
+
+    const auto has_doubles =
+        std::any_of(args.args.begin(), args.args.end(), [](const auto& arg) { return arg.type == TYPE::DOUBLE; });
 
     cpp_file << info();
 
@@ -363,10 +359,9 @@ void generate_cpp(const arguments& args, const options& opt, std::ofstream& cpp_
                 "\n"
              << close();
 
-    size_t max_length = 0;
-    for (const auto& arg : args.args)
-        if (auto length = arg.name.length(); length > max_length)
-            max_length = length;
+    const auto max_length = std::ranges::max_element(args.args, [](const auto& a, const auto& b)
+                                                     { return a.name.length() < b.name.length(); })
+                                ->name.length();
 
     if (opt.print)
     {
@@ -379,7 +374,7 @@ void generate_cpp(const arguments& args, const options& opt, std::ofstream& cpp_
         {
             auto tmp_string = arg.name;
             if (auto diff = max_length - tmp_string.length(); diff > 0)
-                tmp_string.append(diff, ' ');
+                tmp_string.resize(max_length, ' ');
 
             static const std::map<TYPE, std::string> map_type_desc = {{TYPE::DOUBLE, "<double>"},
                                                                       {TYPE::INT, "<int>   "},
@@ -406,7 +401,7 @@ void generate_cpp(const arguments& args, const options& opt, std::ofstream& cpp_
         {
             auto tmp_string = arg.name;
             if (auto diff = max_length - tmp_string.length(); diff > 0)
-                tmp_string.append(diff, ' ');
+                tmp_string.resize(max_length, ' ');
 
             if (arg.type == TYPE::FLAG)
             {

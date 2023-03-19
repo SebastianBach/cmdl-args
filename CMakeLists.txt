@@ -12,4 +12,6 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -Wold-style-cast -Wunused -Wpedantic -Wconversion -Werror)
 endif()
 
+file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/test_results)
+
 add_subdirectory(src)

@@ -1,5 +1,3 @@
-**WIP**
-
 A tool that generates specific C++ code that parses command line arguments based on a description of the desired arguments.
 
 ```
